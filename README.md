@@ -1,15 +1,17 @@
 # codbot
 
-Answers questions about a Markdown knowledge base using Claude. Currently loaded with a
+Answers questions about a Markdown knowledge base using an LLM via [OpenRouter](https://openrouter.ai). Currently loaded with a
 **Call of Duty: Modern Warfare 4 (2026)** knowledge base covering Multiplayer and DMZ (see [`knowledge/README.md`](knowledge/README.md)).
 
 You can ask from the terminal or from Discord.
 
 ## How it works
 
-- Every `.md` file under [`knowledge/`](knowledge/) is loaded and placed in Claude's system prompt
+- Every `.md` file under [`knowledge/`](knowledge/) is loaded and placed in the model's system prompt
   (with prompt caching, so repeat questions are cheap). At ~65 KB this fits easily; no vector DB needed.
-- [`codbot/answer.py`](codbot/answer.py) asks Claude (`claude-opus-5-5` by default) and returns the answer.
+- [`codbot/answer.py`](codbot/answer.py) asks the model set by `OPEN_ROUTER_MODEL` and returns the answer.
+  Use the model's `canonical_slug` from [OpenRouter's model list](https://openrouter.ai/api/v1/models);
+  the default is `anthropic/claude-opus-5.5-20260921`.
 - [`codbot/discord_bot.py`](codbot/discord_bot.py) is a [discord.py](https://github.com/Rapptz/discord.py) bot:
   - `/ask question:<text>` slash command
   - `@codbot <question>` mentions
@@ -21,7 +23,7 @@ Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 ./scripts/setup.sh     # installs uv if needed, then dependencies
-cp .env.example .env   # then fill in ANTHROPIC_API_KEY and DISCORD_TOKEN
+cp .env.example .env   # then fill in OPEN_ROUTER_API_KEY and DISCORD_TOKEN
 ```
 
 ### Try it from the terminal
@@ -55,7 +57,7 @@ In the environment's settings, set **Setup script** to:
 bash /home/user/codbot/scripts/setup.sh
 ```
 
-Put `ANTHROPIC_API_KEY` (and `DISCORD_TOKEN` if you want to run the bot there) in the environment's variables.
+Put `OPEN_ROUTER_API_KEY` (and optionally `OPEN_ROUTER_MODEL`, and `DISCORD_TOKEN` if you want to run the bot there) in the environment's variables.
 The setup script itself can't read them, and doesn't need to.
 
 ## Updating the knowledge base
