@@ -1,0 +1,19 @@
+[project]
+name = "codbot"
+version = "0.1.0"
+description = "Answer questions about a Markdown knowledge base, via the CLI or Discord."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=2.3.0",
+    "discord.py>=2.7.1",
+    "python-dotenv>=1.0.1",
+]
+
+[project.scripts]
+codbot = "codbot.cli:main"
+codbot-discord = "codbot.discord_bot:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
