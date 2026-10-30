@@ -17,6 +17,11 @@ setup:
 ask +question:
     uv run codbot "$@"
 
+# Refresh knowledge base files from the web (all of them if none given), then review with `git diff`
+[positional-arguments]
+update *paths:
+    uv run codbot-update "$@"
+
 # Start the web server (http://localhost:8000 by default)
 web:
     uv run codbot-web

@@ -12,6 +12,11 @@ You can ask from the terminal, a web page, or Discord.
 - [`codbot/answer.py`](codbot/answer.py) asks the model set by `OPEN_ROUTER_MODEL` and returns the answer.
   Use the model's `canonical_slug` from [OpenRouter's model list](https://openrouter.ai/api/v1/models);
   the default is `anthropic/claude-opus-5.5-20260921`.
+- When the knowledge base doesn't cover a question, or the question is about something newer, the model can search the web
+  with OpenRouter's [web search server tool](https://openrouter.ai/docs/guides/features/server-tools/web-search)
+  (up to 3 searches per question). Answers say which parts came from the web and link their sources.
+  The default `auto` engine uses the model's native search where it has one (it does for Anthropic, OpenAI and Google models)
+  and Exa otherwise; searches cost a little on top of tokens. Set `CODBOT_WEB_SEARCH=0` to turn this off.
 - [`codbot/web/`](codbot/web/) is a small [aiohttp](https://docs.aiohttp.org) server: a chat-style page at `/`,
   `POST /ask` with `{"question": "..."}` returning `{"answer": "..."}`, and `POST /reload` to re-read `knowledge/`.
 - [`codbot/discord_bot.py`](codbot/discord_bot.py) is a [discord.py](https://github.com/Rapptz/discord.py) bot:
@@ -78,4 +83,14 @@ The setup script itself can't read them, and doesn't need to.
 ## Updating the knowledge base
 
 Add or edit `.md` files anywhere under `knowledge/`, then run `/reload` in Discord, `POST /reload` to the web server, or restart.
+
+To refresh files from the web, run:
+
+```bash
+uv run codbot-update season-1.md multiplayer/06-meta-tier-list.md
+```
+
+(or `just update ...`). With no arguments it goes through every file, which takes a while and costs more.
+For each file the model searches for anything out of date or missing, then rewrites the file in place, keeping its structure
+and linking a source for each change. Review the changes with `git diff` before you commit them.
 Point `CODBOT_KNOWLEDGE_DIR` at another folder to use a different knowledge base.
