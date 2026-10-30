@@ -5,8 +5,8 @@ description = "Answer questions about a Markdown knowledge base, via the CLI or 
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "anthropic>=2.3.0",
     "discord.py>=2.7.1",
+    "openai>=3.41.0",
     "python-dotenv>=1.0.1",
 ]
 

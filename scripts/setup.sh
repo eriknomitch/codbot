@@ -3,7 +3,7 @@
 #
 # Claude cloud environment: set the environment's setup script to
 #   bash /home/user/codbot/scripts/setup.sh
-# Secrets (ANTHROPIC_API_KEY, DISCORD_TOKEN) go in the environment's variables, not here.
+# Secrets (OPEN_ROUTER_API_KEY, DISCORD_TOKEN) go in the environment's variables, not here.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
