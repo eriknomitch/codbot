@@ -14,5 +14,11 @@ if ! command -v uv >/dev/null 2>&1; then
   export PATH="$HOME/.local/bin:$PATH"
 fi
 
+# just runs the project's common tasks (see justfile). uv installs it from PyPI's rust-just package.
+if ! command -v just >/dev/null 2>&1; then
+  echo "Installing just..."
+  uv tool install rust-just
+fi
+
 uv sync --frozen
 echo "codbot setup complete."

@@ -1,10 +1,11 @@
 [project]
 name = "codbot"
 version = "0.1.0"
-description = "Answer questions about a Markdown knowledge base, via the CLI or Discord."
+description = "Answer questions about a Markdown knowledge base, via the CLI, Discord, or a web page."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "aiohttp>=3.14.5",
     "discord.py>=2.7.1",
     "openai>=3.41.0",
     "python-dotenv>=1.0.1",
@@ -13,6 +14,7 @@ dependencies = [
 [project.scripts]
 codbot = "codbot.cli:main"
 codbot-discord = "codbot.discord_bot:main"
+codbot-web = "codbot.web:main"
 
 [build-system]
 requires = ["hatchling"]
