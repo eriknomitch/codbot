@@ -20,7 +20,7 @@ You can ask from the terminal or from Discord.
 Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-uv sync
+./scripts/setup.sh     # installs uv if needed, then dependencies
 cp .env.example .env   # then fill in ANTHROPIC_API_KEY and DISCORD_TOKEN
 ```
 
@@ -45,6 +45,18 @@ uv run codbot "What's the best gun in DMZ right now?"
 ```bash
 uv run codbot-discord
 ```
+
+## Claude Code cloud environment
+
+In the environment's settings, set **Setup script** to:
+
+```bash
+#!/bin/bash
+bash /home/user/codbot/scripts/setup.sh
+```
+
+Put `ANTHROPIC_API_KEY` (and `DISCORD_TOKEN` if you want to run the bot there) in the environment's variables.
+The setup script itself can't read them, and doesn't need to.
 
 ## Updating the knowledge base
 
