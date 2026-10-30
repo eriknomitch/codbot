@@ -9,50 +9,102 @@
   <style>
     :root {
       --bg: #f7f7f8; --card: #fff; --text: #1d1d1f; --muted: #6b6b73; --border: #dcdce0; --accent: #2f6fde;
+      --you: #e8effc;
     }
     @media (prefers-color-scheme: dark) {
-      :root { --bg: #151517; --card: #1f1f23; --text: #ececf0; --muted: #9a9aa3; --border: #34343a; --accent: #6d9cf0; }
+      :root { --bg: #151517; --card: #1f1f23; --text: #ececf0; --muted: #9a9aa3; --border: #34343a; --accent: #6d9cf0;
+              --you: #223252; }
     }
     * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, sans-serif; }
-    main { max-width: 760px; margin: 0 auto; padding: 24px 16px 120px; }
-    h1 { font-size: 1.4rem; margin: 0 0 4px; }
-    .sub { color: var(--muted); margin: 0 0 24px; }
-    .qa { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
-    .q { font-weight: 600; margin-bottom: 8px; }
-    .a { overflow-x: auto; }
-    .a > :first-child { margin-top: 0; }
-    .a > :last-child { margin-bottom: 0; }
-    .a table { border-collapse: collapse; }
-    .a th, .a td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; }
-    .a code { font-size: 0.9em; }
-    .pending, .error { color: var(--muted); }
+    html, body { height: 100%; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, sans-serif; display: flex; }
+    button { font: inherit; border: 0; border-radius: 8px; padding: 0 18px; background: var(--accent); color: #fff; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: default; }
+    button.plain { background: none; color: var(--muted); padding: 4px 8px; }
+    button.plain:hover { color: var(--text); }
+
+    aside { width: 260px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+    aside .top { padding: 16px; display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+    aside .top button { padding: 8px 14px; }
+    #chats { list-style: none; margin: 0; padding: 0 8px 16px; overflow-y: auto; flex: 1; }
+    #chats li { display: flex; align-items: center; border-radius: 8px; }
+    #chats li.current, #chats li:hover { background: var(--card); }
+    #chats a { flex: 1; min-width: 0; padding: 8px 10px; color: inherit; text-decoration: none;
+               white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.93rem; }
+    #chats li button { visibility: hidden; }
+    #chats li:hover button, #chats li.current button { visibility: visible; }
+    #chats .empty { color: var(--muted); padding: 8px 10px; font-size: 0.93rem; }
+
+    .chat { flex: 1; min-width: 0; display: flex; flex-direction: column; height: 100%; }
+    .scroll { flex: 1; overflow-y: auto; }
+    main { max-width: 760px; margin: 0 auto; padding: 24px 16px; }
+    header { display: flex; align-items: center; gap: 8px; }
+    h1 { font-size: 1.4rem; margin: 0; }
+    #toggle { display: none; }
+    .sub { color: var(--muted); margin: 4px 0 24px; }
+    .msg { border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; overflow-x: auto; }
+    .msg.user { background: var(--you); border-color: transparent; margin-left: 15%; white-space: pre-wrap; }
+    .msg.assistant { background: var(--card); }
+    .msg > :first-child { margin-top: 0; }
+    .msg > :last-child { margin-bottom: 0; }
+    .msg table { border-collapse: collapse; }
+    .msg th, .msg td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; }
+    .msg code { font-size: 0.9em; }
+    .pending { color: var(--muted); }
     .error { color: #d24b4b; }
-    form { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); border-top: 1px solid var(--border); padding: 12px 16px; }
+
+    form { border-top: 1px solid var(--border); padding: 12px 16px; }
     .row { max-width: 760px; margin: 0 auto; display: flex; gap: 8px; }
     textarea { flex: 1; resize: none; font: inherit; color: var(--text); background: var(--card);
                border: 1px solid var(--border); border-radius: 8px; padding: 10px; height: 46px; }
-    button { font: inherit; border: 0; border-radius: 8px; padding: 0 18px; background: var(--accent); color: #fff; cursor: pointer; }
-    button:disabled { opacity: 0.5; cursor: default; }
+
+    @media (max-width: 800px) {
+      aside { position: fixed; inset: 0 auto 0 0; z-index: 2; background: var(--bg); transform: translateX(-100%);
+              transition: transform 0.2s; box-shadow: 0 0 24px rgba(0, 0, 0, 0.25); }
+      body.menu aside { transform: none; }
+      #toggle { display: inline-block; }
+      .msg.user { margin-left: 8%; }
+    }
   </style>
 </head>
 <body>
-  <main>
-    <h1>codbot</h1>
-    <p class="sub">Ask a question about the knowledge base.</p>
-    <div id="log"></div>
-  </main>
-  <form id="form">
-    <div class="row">
-      <textarea id="question" placeholder="Where do I find a gas mask in DMZ?" maxlength="2000" autofocus></textarea>
-      <button id="send">Ask</button>
+  <aside>
+    <div class="top">
+      <strong>Chats</strong>
+      <button id="new" type="button">New chat</button>
     </div>
-  </form>
+    <ul id="chats"></ul>
+  </aside>
+  <div class="chat">
+    <div class="scroll" id="scroll">
+      <main>
+        <header>
+          <button id="toggle" class="plain" type="button" aria-label="Show chats">☰</button>
+          <h1>codbot</h1>
+        </header>
+        <p class="sub">Ask a question about the knowledge base, then follow up.</p>
+        <div id="log"></div>
+      </main>
+    </div>
+    <form id="form">
+      <div class="row">
+        <textarea id="question" placeholder="Where do I find a gas mask in DMZ?" maxlength="2000" autofocus></textarea>
+        <button id="send">Send</button>
+      </div>
+    </form>
+  </div>
   <script>
     const form = document.getElementById("form");
     const input = document.getElementById("question");
     const send = document.getElementById("send");
     const log = document.getElementById("log");
+    const scroll = document.getElementById("scroll");
+    const chats = document.getElementById("chats");
+
+    // The open conversation lives in the URL hash, so reloading or bookmarking the page keeps it.
+    let conversationId = location.hash.slice(1) || null;
+    // Bumped whenever another conversation opens, so a late answer doesn't land in the wrong one.
+    let opened = 0;
 
     function render(el, markdown) {
       // Answers are Markdown; fall back to plain text if the CDN scripts didn't load.
@@ -60,36 +112,97 @@
       else { el.style.whiteSpace = "pre-wrap"; el.textContent = markdown; }
     }
 
+    function addMessage(role, content) {
+      const el = document.createElement("div");
+      el.className = `msg ${role}`;
+      if (role === "assistant") render(el, content);
+      else el.textContent = content;
+      log.append(el);
+      return el;
+    }
+
+    async function request(url, options) {
+      const response = await fetch(url, options);
+      if (!response.ok) throw new Error(await response.text());
+      return response.json();
+    }
+
+    async function refreshChats() {
+      const list = await request("/conversations").catch(() => []);
+      chats.replaceChildren(...list.map((c) => {
+        const li = document.createElement("li");
+        li.classList.toggle("current", c.id === conversationId);
+        const a = document.createElement("a");
+        a.href = `#${c.id}`;
+        a.textContent = c.title;
+        a.title = `${c.title}\n${new Date(c.updated_at).toLocaleString()}`;
+        const del = document.createElement("button");
+        del.className = "plain";
+        del.type = "button";
+        del.textContent = "✕";
+        del.setAttribute("aria-label", "Delete chat");
+        del.addEventListener("click", async () => {
+          if (!confirm(`Delete "${c.title}"?`)) return;
+          await request(`/conversations/${c.id}`, { method: "DELETE" }).catch(() => {});
+          if (c.id === conversationId) location.hash = "";
+          else refreshChats();
+        });
+        li.append(a, del);
+        return li;
+      }));
+      if (!list.length) chats.innerHTML = '<li class="empty">No saved chats yet.</li>';
+    }
+
+    async function open(id) {
+      opened++;
+      conversationId = id;
+      document.body.classList.remove("menu");
+      log.replaceChildren();
+      if (id) {
+        try {
+          const conversation = await request(`/conversations/${id}`);
+          for (const m of conversation.messages) addMessage(m.role, m.content);
+          scroll.scrollTop = scroll.scrollHeight;
+        } catch {
+          conversationId = null;
+          history.replaceState(null, "", location.pathname);
+        }
+      }
+      refreshChats();
+      input.focus();
+    }
+
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const question = input.value.trim();
       if (!question || send.disabled) return;
 
-      const card = document.createElement("div");
-      card.className = "qa";
-      const q = document.createElement("div");
-      q.className = "q";
-      q.textContent = question;
-      const a = document.createElement("div");
-      a.className = "a pending";
+      addMessage("user", question);
+      const a = addMessage("assistant", "");
+      a.classList.add("pending");
       a.textContent = "Thinking…";
-      card.append(q, a);
-      log.append(card);
-      card.scrollIntoView({ behavior: "smooth" });
+      a.scrollIntoView({ behavior: "smooth" });
 
       input.value = "";
       send.disabled = true;
+      const current = opened;
       try {
-        const response = await fetch("/ask", {
+        const data = await request("/ask", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question }),
+          body: JSON.stringify({ question, conversation_id: conversationId }),
         });
-        if (!response.ok) throw new Error(await response.text());
-        a.className = "a";
-        render(a, (await response.json()).answer);
+        if (current !== opened) return refreshChats();
+        a.classList.remove("pending");
+        render(a, data.answer);
+        if (data.conversation_id !== conversationId) {
+          conversationId = data.conversation_id;
+          // replaceState doesn't fire hashchange, so the log we just built stays put.
+          history.replaceState(null, "", `#${conversationId}`);
+        }
+        refreshChats();
       } catch (error) {
-        a.className = "a error";
+        a.className = "msg assistant error";
         a.textContent = error.message || "Something went wrong.";
       } finally {
         send.disabled = false;
@@ -101,6 +214,19 @@
     input.addEventListener("keydown", (event) => {
       if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); form.requestSubmit(); }
     });
+
+    document.getElementById("new").addEventListener("click", () => {
+      if (location.hash) location.hash = "";
+      else open(null);
+    });
+    document.getElementById("toggle").addEventListener("click", (event) => {
+      event.stopPropagation();
+      document.body.classList.toggle("menu");
+    });
+    // On narrow screens, tapping the conversation closes the chat list.
+    document.querySelector(".chat").addEventListener("click", () => document.body.classList.remove("menu"));
+    window.addEventListener("hashchange", () => open(location.hash.slice(1) || null));
+    open(conversationId);
   </script>
 </body>
 </html>
