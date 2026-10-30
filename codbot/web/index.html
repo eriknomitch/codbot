@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>codbot</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+  <style>
+    :root {
+      --bg: #f7f7f8; --card: #fff; --text: #1d1d1f; --muted: #6b6b73; --border: #dcdce0; --accent: #2f6fde;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #151517; --card: #1f1f23; --text: #ececf0; --muted: #9a9aa3; --border: #34343a; --accent: #6d9cf0; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 24px 16px 120px; }
+    h1 { font-size: 1.4rem; margin: 0 0 4px; }
+    .sub { color: var(--muted); margin: 0 0 24px; }
+    .qa { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+    .q { font-weight: 600; margin-bottom: 8px; }
+    .a { overflow-x: auto; }
+    .a > :first-child { margin-top: 0; }
+    .a > :last-child { margin-bottom: 0; }
+    .a table { border-collapse: collapse; }
+    .a th, .a td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; }
+    .a code { font-size: 0.9em; }
+    .pending, .error { color: var(--muted); }
+    .error { color: #d24b4b; }
+    form { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); border-top: 1px solid var(--border); padding: 12px 16px; }
+    .row { max-width: 760px; margin: 0 auto; display: flex; gap: 8px; }
+    textarea { flex: 1; resize: none; font: inherit; color: var(--text); background: var(--card);
+               border: 1px solid var(--border); border-radius: 8px; padding: 10px; height: 46px; }
+    button { font: inherit; border: 0; border-radius: 8px; padding: 0 18px; background: var(--accent); color: #fff; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: default; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>codbot</h1>
+    <p class="sub">Ask a question about the knowledge base.</p>
+    <div id="log"></div>
+  </main>
+  <form id="form">
+    <div class="row">
+      <textarea id="question" placeholder="Where do I find a gas mask in DMZ?" maxlength="2000" autofocus></textarea>
+      <button id="send">Ask</button>
+    </div>
+  </form>
+  <script>
+    const form = document.getElementById("form");
+    const input = document.getElementById("question");
+    const send = document.getElementById("send");
+    const log = document.getElementById("log");
+
+    function render(el, markdown) {
+      // Answers are Markdown; fall back to plain text if the CDN scripts didn't load.
+      if (window.marked && window.DOMPurify) el.innerHTML = DOMPurify.sanitize(marked.parse(markdown));
+      else { el.style.whiteSpace = "pre-wrap"; el.textContent = markdown; }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const question = input.value.trim();
+      if (!question || send.disabled) return;
+
+      const card = document.createElement("div");
+      card.className = "qa";
+      const q = document.createElement("div");
+      q.className = "q";
+      q.textContent = question;
+      const a = document.createElement("div");
+      a.className = "a pending";
+      a.textContent = "Thinking…";
+      card.append(q, a);
+      log.append(card);
+      card.scrollIntoView({ behavior: "smooth" });
+
+      input.value = "";
+      send.disabled = true;
+      try {
+        const response = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question }),
+        });
+        if (!response.ok) throw new Error(await response.text());
+        a.className = "a";
+        render(a, (await response.json()).answer);
+      } catch (error) {
+        a.className = "a error";
+        a.textContent = error.message || "Something went wrong.";
+      } finally {
+        send.disabled = false;
+        input.focus();
+      }
+    });
+
+    // Enter sends; Shift+Enter adds a new line.
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); form.requestSubmit(); }
+    });
+  </script>
+</body>
+</html>
