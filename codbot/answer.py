@@ -1,6 +1,7 @@
 """Answer questions about the knowledge base via OpenRouter, falling back to web search."""
 
 import os
+from collections.abc import Sequence
 
 from openai import AsyncOpenAI
 
@@ -15,11 +16,14 @@ DEFAULT_MODEL = "anthropic/claude-opus-5.5-20260921"
 WEB_SEARCH_TOOL = {"type": "openrouter:web_search", "parameters": {"max_results": 5}}
 # Cap on server-tool steps (searches) per request, so one question can't run up the bill.
 MAX_SEARCHES = 3
+# How many earlier messages of a conversation to send along with a new question, so long chats stay affordable.
+MAX_HISTORY_MESSAGES = 40
 
 INSTRUCTIONS = """You answer questions using the knowledge base below.
 Base your answers on the documents, and cite the document path(s) you relied on when useful.
 If the knowledge base marks a fact as unofficial, reported, or fast-changing (like meta or tier lists), pass that caveat on.
-Keep answers concise: they are often shown in Discord."""
+Keep answers concise: they are often shown in Discord.
+Questions may follow on from earlier messages in the conversation; read them in that context."""
 
 SEARCH_INSTRUCTIONS = """If the documents don't cover the question, or it asks about something newer than they do,
 use web search. Say plainly which parts of your answer come from the web rather than the knowledge base, and link the
@@ -78,6 +82,12 @@ class Answerer:
             return "Sorry, I can't help with that one."
         return (choice.message.content or "").strip()
 
-    async def ask(self, question: str) -> str:
+    async def ask(self, question: str, history: Sequence[dict] = ()) -> str:
+        """Answer a question, following on from history: earlier {"role", "content"} messages, oldest first."""
+        earlier = [{"role": m["role"], "content": m["content"]} for m in history[-MAX_HISTORY_MESSAGES:]]
+        # Trimming can cut a question from its answer; the conversation should resume on a question.
+        while earlier and earlier[0]["role"] != "user":
+            earlier.pop(0)
+        messages = [self.system, *earlier, {"role": "user", "content": question}]
         searches = MAX_SEARCHES if self.web_search else 0
-        return await self.complete([self.system, {"role": "user", "content": question}], max_searches=searches)
+        return await self.complete(messages, max_searches=searches)

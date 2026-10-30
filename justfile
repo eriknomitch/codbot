@@ -12,9 +12,14 @@ default:
 setup:
     ./scripts/setup.sh
 
-# Ask a question from the terminal
+# Ask a question from the terminal, in a new conversation
 [positional-arguments]
 ask +question:
+    uv run codbot "$@"
+
+# Chat back and forth in the terminal (`just chat -c` continues the last conversation)
+[positional-arguments]
+chat *args:
     uv run codbot "$@"
 
 # Refresh knowledge base files from the web (all of them if none given), then review with `git diff`
