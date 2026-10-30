@@ -24,9 +24,12 @@ You can ask from the terminal, a web page, or Discord.
 Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-./scripts/setup.sh     # installs uv if needed, then dependencies
+./scripts/setup.sh     # installs uv and just if needed, then dependencies
 cp .env.example .env   # then fill in OPEN_ROUTER_API_KEY and DISCORD_TOKEN
 ```
+
+Common tasks live in the [`justfile`](justfile); run `just` to list them
+(`just web`, `just ask "..."`, `just discord`, `just reload`, `just lock`, `just setup`).
 
 ### Try it from the terminal
 
