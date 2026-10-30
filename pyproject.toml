@@ -15,6 +15,7 @@ dependencies = [
 codbot = "codbot.cli:main"
 codbot-discord = "codbot.discord_bot:main"
 codbot-web = "codbot.web:main"
+codbot-update = "codbot.update:main"
 
 [build-system]
 requires = ["hatchling"]
